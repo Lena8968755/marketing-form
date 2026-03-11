@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заказ маркетинговых материалов</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0e14;
+    --surface: #13151f;
+    --surface2: #1a1d2e;
+    --border: #252840;
+    --accent: #5b6af5;
+    --accent2: #8b5cf6;
+    --accent3: #06d6a0;
+    --text: #e8eaf6;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --error: #f87171;
+    --card-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Onest', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(91,106,245,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(91,106,245,0.04) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; top: -200px; right: -200px; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(91,106,245,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: var(--bg); align-items: center; justify-content: center;
+  }
+  #login-screen.show { display: flex; animation: fadeIn 0.3s ease; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 380px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  }
+  .login-logo { font-family: 'Unbounded', sans-serif; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .login-title { font-family: 'Unbounded', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; line-height: 1.2; }
+  .login-sub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+  .login-field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+  .login-field label { font-size: 0.76rem; color: var(--text-dim); }
+  .login-field input {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.7rem 1rem; font-family: 'Onest', sans-serif; font-size: 0.875rem;
+    color: var(--text); outline: none; width: 100%; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .login-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,106,245,0.12); }
+  .login-error {
+    display: none; color: var(--error); font-size: 0.76rem; margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem; background: rgba(248,113,113,0.08);
+    border-radius: 6px; border: 1px solid rgba(248,113,113,0.2);
+  }
+  .login-error.show { display: block; }
+  .btn-login {
+    width: 100%; padding: 0.85rem; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; font-family: 'Unbounded', sans-serif;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; color: white;
+    cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+  }
+  .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(91,106,245,0.35); }
+  .btn-cancel-login {
+    width: 100%; background: none; border: none; color: var(--text-muted);
+    font-size: 0.78rem; cursor: pointer; margin-top: 0.75rem; padding: 0.4rem;
+    transition: color 0.2s; font-family: 'Onest', sans-serif;
+  }
+  .btn-cancel-login:hover { color: var(--text); }
+
+  /* NAV */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,14,20,0.92); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border); padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-family: 'Unbounded', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: var(--accent); padding: 1.25rem 0; text-transform: uppercase; }
+  .nav-brand span { color: var(--text-muted); }
+  .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+  .nav-tabs { display: flex; }
+  .nav-tab {
+    padding: 1.25rem 1.25rem; font-family: 'Onest', sans-serif; font-size: 0.78rem;
+    font-weight: 500; color: var(--text-muted); cursor: pointer; border: none;
+    background: none; border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .btn-marketer {
+    font-family: 'Onest', sans-serif; font-size: 0.72rem; font-weight: 500;
+    padding: 0.38rem 0.9rem; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-marketer:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-marketer.logged { border-color: var(--accent3); color: var(--accent3); }
+
+  /* MAIN */
+  .main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .page-header { margin-bottom: 2.5rem; }
+  .page-title { font-family: 'Unbounded', sans-serif; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 0.5rem; }
+  .page-title span { color: var(--accent); }
+  .page-subtitle { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* FORM */
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--card-shadow); }
+  .section-label {
+    font-family: 'Unbounded', sans-serif; font-size: 0.6rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field-full { grid-column: 1 / -1; }
+  label { font-size: 0.78rem; font-weight: 500; color: var(--text-dim); letter-spacing: 0.01em; }
+  label .req { color: var(--accent); margin-left: 2px; }
+  input, select, textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.65rem 0.9rem; font-family: 'Onest', sans-serif; font-size: 0.875rem;
+    color: var(--text); transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,106,245,0.12); }
+  input::placeholder, textarea::placeholder { color: var(--text-muted); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .brand-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .brand-option { position: relative; cursor: pointer; }
+  .brand-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .brand-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; background: var(--surface2); user-select: none; }
+  .brand-option input:checked + .brand-card { border-color: var(--accent); background: rgba(91,106,245,0.08); box-shadow: 0 0 0 1px rgba(91,106,245,0.3); }
+  .brand-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .brand-name { font-size: 0.78rem; font-weight: 600; }
+
+  .material-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 0.5rem; }
+  .mat-option { position: relative; cursor: pointer; }
+  .mat-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .mat-card { border: 1.5px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.75rem; font-weight: 500; text-align: center; color: var(--text-dim); transition: all 0.2s; background: var(--surface2); user-select: none; }
+  .mat-option input:checked + .mat-card { border-color: var(--accent3); color: var(--accent3); background: rgba(6,214,160,0.06); }
+  .mat-card:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .btn-submit {
+    width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; font-family: 'Unbounded', sans-serif;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; color: white;
+    cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; text-transform: uppercase;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(91,106,245,0.35); }
+  .success-toast {
+    display: none; background: rgba(6,214,160,0.1); border: 1px solid var(--accent3);
+    border-radius: 10px; padding: 1rem 1.25rem; color: var(--accent3);
+    font-size: 0.85rem; font-weight: 500; margin-top: 1rem; text-align: center;
+  }
+
+  /* BASE */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .stat-num { font-family: 'Unbounded', sans-serif; font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 0.25rem; }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow); }
+  .table-header { padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem; }
+  .table-title { font-family: 'Unbounded', sans-serif; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+  .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .filter-btn { padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn-export { padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+  .btn-export:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 0.75rem 1.25rem; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+  td { padding: 0.85rem 1.25rem; font-size: 0.82rem; border-bottom: 1px solid rgba(37,40,64,0.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(91,106,245,0.03); }
+
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.68rem; font-weight: 600; }
+  .badge-new { background: rgba(91,106,245,0.15); color: #818cf8; }
+  .badge-inwork { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .badge-done { background: rgba(52,211,153,0.15); color: #34d399; }
+  .brand-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.03em; }
+
+  .btn-icon { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.5rem; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; transition: all 0.15s; margin-left: 0.25rem; }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.85rem; }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 2rem; }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; max-width: 600px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+  .modal-title { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .detail-item { display: flex; flex-direction: column; gap: 0.2rem; }
+  .detail-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .detail-value { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+  .detail-item.full { grid-column: 1/-1; }
+  .status-select { margin-top: 1.25rem; display: flex; align-items: center; gap: 0.75rem; }
+  .status-select label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+  .status-select select { flex: 1; }
+
+  @media (max-width: 600px) {
+    .grid-2, .brand-grid { grid-template-columns: 1fr; }
+    .material-grid { grid-template-columns: repeat(2,1fr); }
+    .stats-row { grid-template-columns: 1fr; }
+    .nav-tab { padding: 1.25rem 0.75rem; font-size: 0.72rem; }
+    .main { padding: 2rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Отдел маркетинга</div>
+    <div class="login-title">Панель<br>маркетолога</div>
+    <div class="login-sub">Доступ только для сотрудников маркетинга</div>
+    <div class="login-field">
+      <label>Логин</label>
+      <input type="text" id="login-user" placeholder="marketing" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Пароль</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="login-error">Неверный логин или пароль</div>
+    <button class="btn-login" onclick="doLogin()">→ Войти</button>
+    <button class="btn-cancel-login" onclick="cancelLogin()">Отмена</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">Маркетинг <span>/ Заявки</span></div>
+  <div class="nav-right">
+    <div id="nav-tabs-marketer" style="display:none">
+      <button class="nav-tab" id="tab-base" onclick="showPage('base',this)">📊 База заявок</button>
+      <button class="nav-tab active" id="tab-form" onclick="showPage('form',this)">📝 Новая заявка</button>
+    </div>
+    <button class="btn-marketer" id="btn-marketer-access" onclick="marketerAccess()">🔒 Маркетолог</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- БАЗА ЗАЯВОК -->
+  <div class="page" id="page-base">
+    <div class="page-header">
+      <div class="page-title">База <span>заявок</span></div>
+      <div class="page-subtitle">Все поступившие заявки на маркетинговые материалы</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Всего заявок</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-new" style="color:#818cf8">0</div><div class="stat-label">Новых</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-inwork" style="color:#fbbf24">0</div><div class="stat-label">В работе</div></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-title">Заявки</div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+          <div class="filter-row">
+            <button class="filter-btn active" onclick="filterOrders('all',this)">Все</button>
+            <button class="filter-btn" onclick="filterOrders('new',this)">Новые</button>
+            <button class="filter-btn" onclick="filterOrders('inwork',this)">В работе</button>
+            <button class="filter-btn" onclick="filterOrders('done',this)">Готово</button>
+          </div>
+          <button class="btn-export" onclick="exportCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div id="orders-table-wrap"><div class="empty-state"><div class="icon">📭</div>Пока нет заявок.</div></div>
+    </div>
+  </div>
+
+  <!-- ФОРМА -->
+  <div class="page active" id="page-form">
+    <div class="page-header">
+      <div class="page-title">Заявка на <span>материалы</span></div>
+      <div class="page-subtitle">Заполните форму — маркетолог получит всё необходимое для работы</div>
+    </div>
+    <form id="orderForm" onsubmit="submitForm(event)">
+
+      <div class="form-card">
+        <div class="section-label">01 — Кто заказывает</div>
+        <div class="grid-2">
+          <div class="field"><label>ФИО <span class="req">*</span></label><input type="text" id="f_name" placeholder="Иванов Иван Иванович" required></div>
+          <div class="field"><label>Телефон <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="+7 (___) ___-__-__" required></div>
+          <div class="field">
+            <label>Отдел <span class="req">*</span></label>
+            <select id="f_dept" required>
+              <option value="" disabled selected>Выберите отдел</option>
+              <option>Отдел продаж</option>
+              <option>Отдел маркетинга</option>
+              <option>HR / Кадры</option>
+              <option>Бухгалтерия</option>
+              <option>Логистика</option>
+              <option>Производство</option>
+              <option>ИТ-отдел</option>
+              <option>Руководство</option>
+              <option>Другой</option>
+            </select>
+          </div>
+          <div class="field"><label>Должность</label><input type="text" id="f_position" placeholder="Менеджер по продажам"></div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="section-label">02 — Бренд</div>
+        <div class="brand-grid">
+          <label class="brand-option">
+            <input type="radio" name="brand" value="Вторалюминпродукт" required>
+            <div class="brand-card"><div class="brand-dot" style="background:#5b6af5"></div><div class="brand-name">Вторалюминпродукт</div></div>
+          </label>
+          <label class="brand-option">
+            <input type="radio" name="brand" value="Эковап-Мегабак">
+            <div class="brand-card"><div class="brand-dot" style="background:#06d6a0"></div><div class="brand-name">Эковап-Мегабак</div></div>
+          </label>
+          <label class="brand-option">
+            <input type="radio" name="brand" value="Акрон Центр">
+            <div class="brand-card"><div class="brand-dot" style="background:#f59e0b"></div><div class="brand-name">Акрон Центр</div></div>
+          </label>
+          <label class="brand-option">
+            <input type="radio" name="brand" value="Polymervap">
+            <div class="brand-card"><div class="brand-dot" style="background:#ec4899"></div><div class="brand-name">Polymervap</div></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="section-label">03 — Тип материала</div>
+        <div class="material-grid">
+          <label class="mat-option"><input type="radio" name="mat_type" value="Визитка" required><div class="mat-card">🪪 Визитка</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Листовка"><div class="mat-card">📄 Листовка</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Баннер"><div class="mat-card">🖼 Баннер</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Наклейка"><div class="mat-card">🏷 Наклейка</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Флаг"><div class="mat-card">🚩 Флаг</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Презентация"><div class="mat-card">📊 Презентация</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Подарочная продукция"><div class="mat-card">🎁 Сувениры</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Бейдж"><div class="mat-card">📛 Бейдж</div></label>
+          <label class="mat-option"><input type="radio" name="mat_type" value="Другое"><div class="mat-card">✏️ Другое</div></label>
+        </div>
+        <div class="field" style="margin-top:0.75rem">
+          <label>Уточните тип / название материала <span class="req">*</span></label>
+          <input type="text" id="f_mat_detail" placeholder="Например: визитка двусторонняя, баннер для выставки" required>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="section-label">04 — Детали и тираж</div>
+        <div class="grid-2">
+          <div class="field"><label>Количество <span class="req">*</span></label><input type="number" id="f_qty" placeholder="100" min="1" required></div>
+          <div class="field"><label>Нужно до</label><input type="date" id="f_deadline"></div>
+          <div class="field"><label>Формат / размер</label><input type="text" id="f_size" placeholder="А4, 90×50мм, 3×6м..."></div>
+          <div class="field"><label>Материал / печать</label><input type="text" id="f_print" placeholder="Мелованная бумага, баннерная ткань..."></div>
+          <div class="field field-full">
+            <label>Описание макета и содержимого <span class="req">*</span></label>
+            <textarea id="f_desc" rows="4" placeholder="Опишите подробно: что должно быть изображено, какие тексты, контакты, логотип, цвета, пожелания по дизайну..." required></textarea>
+          </div>
+          <div class="field field-full"><label>Файлы / материалы</label><input type="text" id="f_files" placeholder="Ссылка на Диск, папку, или опишите что есть"></div>
+          <div class="field field-full"><label>Комментарии</label><textarea id="f_comments" rows="2" placeholder="Любые важные детали"></textarea></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">→ Отправить заявку</button>
+      <div class="success-toast" id="successToast">✅ Заявка принята! Маркетолог скоро с вами свяжется.</div>
+    </form>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Детали заявки</div>
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ——— CREDENTIALS (поменяй под себя) ———
+const MARKETER_LOGIN = 'marketing';
+const MARKETER_PASS  = 'mkt2024';
+// ——————————————————————————————————————
+
+const BRAND_COLORS = { 'Вторалюминпродукт':'#5b6af5', 'Эковап-Мегабак':'#06d6a0', 'Акрон Центр':'#f59e0b', 'Polymervap':'#ec4899' };
+const STATUS_LABELS = { new:'Новая', inwork:'В работе', done:'Готово' };
+
+let isMarketer = sessionStorage.getItem('mkt_auth') === '1';
+let orders = JSON.parse(localStorage.getItem('mkt_orders') || '[]');
+let currentFilter = 'all';
+
+function saveOrders() { localStorage.setItem('mkt_orders', JSON.stringify(orders)); }
+
+// AUTH
+function marketerAccess() {
+  if (isMarketer) {
+    isMarketer = false;
+    sessionStorage.removeItem('mkt_auth');
+    applyRole();
+    showPage('form');
+  } else {
+    document.getElementById('login-screen').classList.add('show');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-error').classList.remove('show');
+    setTimeout(() => document.getElementById('login-user').focus(), 80);
+  }
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u === MARKETER_LOGIN && p === MARKETER_PASS) {
+    isMarketer = true;
+    sessionStorage.setItem('mkt_auth', '1');
+    document.getElementById('login-screen').classList.remove('show');
+    applyRole();
+    showPage('base');
+    document.getElementById('tab-base').classList.add('active');
+    document.getElementById('tab-form').classList.remove('active');
+  } else {
+    document.getElementById('login-error').classList.add('show');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function cancelLogin() { document.getElementById('login-screen').classList.remove('show'); }
+
+function applyRole() {
+  const btn = document.getElementById('btn-marketer-access');
+  const tabs = document.getElementById('nav-tabs-marketer');
+  if (isMarketer) {
+    btn.textContent = '🔓 Выйти';
+    btn.classList.add('logged');
+    tabs.style.display = 'flex';
+  } else {
+    btn.textContent = '🔒 Маркетолог';
+    btn.classList.remove('logged');
+    tabs.style.display = 'none';
+  }
+}
+
+function showPage(id, tabEl) {
+  if (id === 'base' && !isMarketer) return;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (tabEl) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+  if (id === 'base') renderTable();
+}
+
+// FORM
+function submitForm(e) {
+  e.preventDefault();
+  const brand = document.querySelector('input[name="brand"]:checked')?.value || '';
+  const mat   = document.querySelector('input[name="mat_type"]:checked')?.value || '';
+  orders.unshift({
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ru-RU'),
+    time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}),
+    name:       document.getElementById('f_name').value,
+    phone:      document.getElementById('f_phone').value,
+    dept:       document.getElementById('f_dept').value,
+    position:   document.getElementById('f_position').value,
+    brand, mat_type: mat,
+    mat_detail: document.getElementById('f_mat_detail').value,
+    qty:        document.getElementById('f_qty').value,
+    deadline:   document.getElementById('f_deadline').value,
+    size:       document.getElementById('f_size').value,
+    print:      document.getElementById('f_print').value,
+    desc:       document.getElementById('f_desc').value,
+    files:      document.getElementById('f_files').value,
+    comments:   document.getElementById('f_comments').value,
+    status:     'new'
+  });
+  saveOrders();
+  document.getElementById('orderForm').reset();
+  const t = document.getElementById('successToast');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 4500);
+}
+
+// TABLE
+function filterOrders(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  if (!isMarketer) return;
+  const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+  document.getElementById('stat-total').textContent  = orders.length;
+  document.getElementById('stat-new').textContent    = orders.filter(o=>o.status==='new').length;
+  document.getElementById('stat-inwork').textContent = orders.filter(o=>o.status==='inwork').length;
+
+  const wrap = document.getElementById('orders-table-wrap');
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">📭</div>${orders.length===0?'Пока нет заявок. Коллеги ещё не присылали.':'Нет заявок с таким фильтром.'}</div>`;
+    return;
+  }
+  const rows = filtered.map(o => {
+    const bc = BRAND_COLORS[o.brand]||'#888';
+    const sc = o.status==='new'?'badge-new':o.status==='inwork'?'badge-inwork':'badge-done';
+    return `<tr>
+      <td>${o.date}<br><span style="color:var(--text-muted);font-size:0.7rem">${o.time}</span></td>
+      <td><div style="font-weight:600">${o.name}</div><div style="color:var(--text-muted);font-size:0.72rem">${o.dept}</div></td>
+      <td><span class="brand-tag" style="background:${bc}22;color:${bc}">${o.brand}</span></td>
+      <td style="font-size:0.78rem">${o.mat_detail||o.mat_type}</td>
+      <td style="text-align:center;font-weight:600">${o.qty}</td>
+      <td style="font-size:0.78rem">${o.deadline||'—'}</td>
+      <td><span class="badge ${sc}">${STATUS_LABELS[o.status]}</span></td>
+      <td>
+        <button class="btn-icon" onclick="openModal(${o.id})">🔍</button>
+        <button class="btn-icon" onclick="deleteOrder(${o.id})" style="color:var(--error)">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table><thead><tr>
+    <th>Дата</th><th>Заказчик</th><th>Бренд</th>
+    <th>Материал</th><th style="text-align:center">Кол-во</th>
+    <th>Срок</th><th>Статус</th><th></th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function openModal(id) {
+  const o = orders.find(x=>x.id===id); if (!o) return;
+  const bc = BRAND_COLORS[o.brand]||'#888';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">ФИО</div><div class="detail-value">${o.name}</div></div>
+      <div class="detail-item"><div class="detail-label">Телефон</div><div class="detail-value">${o.phone}</div></div>
+      <div class="detail-item"><div class="detail-label">Отдел</div><div class="detail-value">${o.dept}</div></div>
+      <div class="detail-item"><div class="detail-label">Должность</div><div class="detail-value">${o.position||'—'}</div></div>
+      <div class="detail-item"><div class="detail-label">Бренд</div><div class="detail-value"><span class="brand-tag" style="background:${bc}22;color:${bc}">${o.brand}</span></div></div>
+      <div class="detail-item"><div class="detail-label">Дата</div><div class="detail-value">${o.date} ${o.time}</div></div>
+      <div class="detail-item"><div class="detail-label">Тип материала</div><div class="detail-value">${o.mat_type}</div></div>
+      <div class="detail-item"><div class="detail-label">Уточнение</div><div class="detail-value">${o.mat_detail}</div></div>
+      <div class="detail-item"><div class="detail-label">Количество</div><div class="detail-value">${o.qty} шт.</div></div>
+      <div class="detail-item"><div class="detail-label">Срок</div><div class="detail-value">${o.deadline||'Не указан'}</div></div>
+      <div class="detail-item"><div class="detail-label">Формат / размер</div><div class="detail-value">${o.size||'—'}</div></div>
+      <div class="detail-item"><div class="detail-label">Материал / печать</div><div class="detail-value">${o.print||'—'}</div></div>
+      <div class="detail-item full"><div class="detail-label">Описание макета</div><div class="detail-value" style="white-space:pre-wrap">${o.desc}</div></div>
+      <div class="detail-item full"><div class="detail-label">Файлы / исходники</div><div class="detail-value">${o.files||'Не указано'}</div></div>
+      <div class="detail-item full"><div class="detail-label">Комментарии</div><div class="detail-value">${o.comments||'—'}</div></div>
+    </div>
+    <div class="status-select">
+      <label>Статус:</label>
+      <select onchange="updateStatus(${o.id},this.value)">
+        <option value="new" ${o.status==='new'?'selected':''}>🆕 Новая</option>
+        <option value="inwork" ${o.status==='inwork'?'selected':''}>⚙️ В работе</option>
+        <option value="done" ${o.status==='done'?'selected':''}>✅ Готово</option>
+      </select>
+    </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function updateStatus(id, status) {
+  const o = orders.find(x=>x.id===id);
+  if (o) { o.status = status; saveOrders(); renderTable(); }
+}
+
+function deleteOrder(id) {
+  if (!confirm('Удалить заявку?')) return;
+  orders = orders.filter(x=>x.id!==id);
+  saveOrders(); renderTable();
+}
+
+function closeModal(e) { if(e.target===document.getElementById('modal')) closeModalBtn(); }
+function closeModalBtn() { document.getElementById('modal').classList.remove('open'); }
+
+function exportCSV() {
+  const cols = ['Дата','Время','ФИО','Телефон','Отдел','Должность','Бренд','Тип','Материал','Кол-во','Срок','Формат','Печать','Описание','Файлы','Комментарии','Статус'];
+  const esc = v => '"'+String(v||'').replace(/"/g,'""')+'"';
+  const rows = orders.map(o=>[o.date,o.time,o.name,o.phone,o.dept,o.position,o.brand,o.mat_type,o.mat_detail,o.qty,o.deadline,o.size,o.print,o.desc,o.files,o.comments,STATUS_LABELS[o.status]].map(esc).join(','));
+  const csv = '\uFEFF'+[cols.map(esc).join(','),...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'заявки_маркетинг_'+new Date().toLocaleDateString('ru-RU').replace(/\./g,'-')+'.csv';
+  a.click();
+}
+
+// INIT
+applyRole();
+</script>
+</body>
+</html>
